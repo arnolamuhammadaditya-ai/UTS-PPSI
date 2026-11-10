@@ -27,29 +27,40 @@ export default async function PetugasDashboard({ searchParams }: PageProps) {
     ...(statusFilter ? { status: statusFilter } : {}),
   };
 
-  const [reports, total, counts] = await Promise.all([
-    prisma.report.findMany({
-      where,
-      skip,
-      take: limit,
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        judul: true,
-        alamat: true,
-        status: true,
-        createdAt: true,
-        updatedAt: true,
-        category: { select: { nama: true } },
-        user: { select: { nama: true } },
-        photos: { where: { jenis: 'awal' }, take: 1, select: { url: true } },
-      },
-    }),
-    prisma.report.count({ where }),
-    prisma.report.groupBy({ by: ['status'], where: { assignedTo: session.userId }, _count: { status: true } }),
-  ]);
+  let reports: any[] = [];
+  let total = 0;
+  let counts: any[] = [];
 
-  const totalPages = Math.ceil(total / limit);
+  try {
+    const [dbReports, dbTotal, dbCounts] = await Promise.all([
+      prisma.report.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          judul: true,
+          alamat: true,
+          status: true,
+          createdAt: true,
+          updatedAt: true,
+          category: { select: { nama: true } },
+          user: { select: { nama: true } },
+          photos: { where: { jenis: 'awal' }, take: 1, select: { url: true } },
+        },
+      }),
+      prisma.report.count({ where }),
+      prisma.report.groupBy({ by: ['status'], where: { assignedTo: session.userId }, _count: { status: true } }),
+    ]);
+    reports = dbReports;
+    total = dbTotal;
+    counts = dbCounts;
+  } catch (error) {
+    console.warn('Prisma query failed in petugas page:', error);
+  }
+
+  const totalPages = Math.max(1, Math.ceil(total / limit));
   const statusMap = Object.fromEntries(counts.map(c => [c.status, c._count.status]));
 
   const buildUrl = (overrides: Record<string, string | undefined>) => {

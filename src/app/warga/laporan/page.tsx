@@ -12,29 +12,38 @@ export default async function WargaLaporanPage() {
   
   const user = { nama: session.nama, email: session.email, role: session.role };
 
-  const [reports, counts] = await Promise.all([
-    prisma.report.findMany({
-      where: { userId: session.userId },
-      orderBy: { createdAt: 'desc' },
-      take: 10,
-      select: {
-        id: true,
-        judul: true,
-        alamat: true,
-        status: true,
-        alasanTolak: true,
-        createdAt: true,
-        category: { select: { nama: true } },
-        photos: { where: { jenis: 'awal' }, take: 1, select: { url: true } },
-        rating: { select: { skor: true } },
-      },
-    }),
-    prisma.report.groupBy({
-      by: ['status'],
-      where: { userId: session.userId },
-      _count: { status: true },
-    }),
-  ]);
+  let reports: any[] = [];
+  let counts: any[] = [];
+
+  try {
+    const [dbReports, dbCounts] = await Promise.all([
+      prisma.report.findMany({
+        where: { userId: session.userId },
+        orderBy: { createdAt: 'desc' },
+        take: 10,
+        select: {
+          id: true,
+          judul: true,
+          alamat: true,
+          status: true,
+          alasanTolak: true,
+          createdAt: true,
+          category: { select: { nama: true } },
+          photos: { where: { jenis: 'awal' }, take: 1, select: { url: true } },
+          rating: { select: { skor: true } },
+        },
+      }),
+      prisma.report.groupBy({
+        by: ['status'],
+        where: { userId: session.userId },
+        _count: { status: true },
+      }),
+    ]);
+    reports = dbReports;
+    counts = dbCounts;
+  } catch (error) {
+    console.warn('Prisma query failed in warga laporan page:', error);
+  }
 
   const totalReports = counts.reduce((acc, c) => acc + c._count.status, 0);
   const selesaiCount = counts.find(c => c.status === 'Selesai')?._count.status ?? 0;

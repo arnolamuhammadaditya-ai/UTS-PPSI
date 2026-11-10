@@ -35,29 +35,40 @@ export default async function AdminLaporanPage({ searchParams }: PageProps) {
     ...(q ? { judul: { contains: q, mode: 'insensitive' as const } } : {}),
   };
 
-  const [reports, total, categories] = await Promise.all([
-    prisma.report.findMany({
-      where,
-      skip,
-      take: limit,
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        judul: true,
-        status: true,
-        createdAt: true,
-        category: { select: { nama: true } },
-        department: { select: { nama: true } },
-        user: { select: { nama: true } },
-        assignedUser: { select: { nama: true } },
-        _count: { select: { photos: true } },
-      },
-    }),
-    prisma.report.count({ where }),
-    prisma.category.findMany({ orderBy: { nama: 'asc' } }),
-  ]);
+  let reports: any[] = [];
+  let total = 0;
+  let categories: any[] = [];
 
-  const totalPages = Math.ceil(total / limit);
+  try {
+    const [dbReports, dbTotal, dbCategories] = await Promise.all([
+      prisma.report.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          judul: true,
+          status: true,
+          createdAt: true,
+          category: { select: { nama: true } },
+          department: { select: { nama: true } },
+          user: { select: { nama: true } },
+          assignedUser: { select: { nama: true } },
+          _count: { select: { photos: true } },
+        },
+      }),
+      prisma.report.count({ where }),
+      prisma.category.findMany({ orderBy: { nama: 'asc' } }),
+    ]);
+    reports = dbReports;
+    total = dbTotal;
+    categories = dbCategories;
+  } catch (error) {
+    console.warn('Prisma query failed in admin laporan page:', error);
+  }
+
+  const totalPages = Math.max(1, Math.ceil(total / limit));
 
   const buildUrl = (overrides: Record<string, string | undefined>) => {
     const p = { ...params, ...overrides };

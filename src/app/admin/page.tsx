@@ -24,24 +24,33 @@ export default async function AdminDashboard({
       ? 'Terverifikasi'
       : undefined;
 
-  const [byStatus, reports] = await Promise.all([
-    prisma.report.groupBy({
-      by: ['status'],
-      _count: { status: true },
-    }),
-    prisma.report.findMany({
-      where: statusFilter ? { status: statusFilter } : {},
-      take: 10,
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        judul: true,
-        status: true,
-        createdAt: true,
-        category: { select: { nama: true } },
-      },
-    }),
-  ]);
+  let byStatus: any[] = [];
+  let reports: any[] = [];
+
+  try {
+    const [dbByStatus, dbReports] = await Promise.all([
+      prisma.report.groupBy({
+        by: ['status'],
+        _count: { status: true },
+      }),
+      prisma.report.findMany({
+        where: statusFilter ? { status: statusFilter } : {},
+        take: 10,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          judul: true,
+          status: true,
+          createdAt: true,
+          category: { select: { nama: true } },
+        },
+      }),
+    ]);
+    byStatus = dbByStatus;
+    reports = dbReports;
+  } catch (error) {
+    console.warn('Prisma query failed in admin dashboard:', error);
+  }
 
   const statusMap = Object.fromEntries(
     byStatus.map((s) => [s.status, s._count.status])

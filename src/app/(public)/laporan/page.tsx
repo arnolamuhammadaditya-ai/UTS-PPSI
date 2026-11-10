@@ -40,30 +40,41 @@ export default async function LaporanPublikPage({ searchParams }: PageProps) {
     ...(q ? { judul: { contains: q, mode: 'insensitive' as const } } : {}),
   };
 
-  const [reports, total, categories] = await Promise.all([
-    prisma.report.findMany({
-      where,
-      skip,
-      take: limit,
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        judul: true,
-        deskripsi: true,
-        alamat: true,
-        status: true,
-        createdAt: true,
-        category: { select: { id: true, nama: true } },
-        department: { select: { nama: true } },
-        user: { select: { nama: true } },
-        photos: { where: { jenis: 'awal' }, take: 1, select: { url: true } },
-      },
-    }),
-    prisma.report.count({ where }),
-    prisma.category.findMany({ orderBy: { nama: 'asc' } }),
-  ]);
+  let reports: any[] = [];
+  let total = 0;
+  let categories: any[] = [];
 
-  const totalPages = Math.ceil(total / limit);
+  try {
+    const [dbReports, dbTotal, dbCategories] = await Promise.all([
+      prisma.report.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          judul: true,
+          deskripsi: true,
+          alamat: true,
+          status: true,
+          createdAt: true,
+          category: { select: { id: true, nama: true } },
+          department: { select: { nama: true } },
+          user: { select: { nama: true } },
+          photos: { where: { jenis: 'awal' }, take: 1, select: { url: true } },
+        },
+      }),
+      prisma.report.count({ where }),
+      prisma.category.findMany({ orderBy: { nama: 'asc' } }),
+    ]);
+    reports = dbReports;
+    total = dbTotal;
+    categories = dbCategories;
+  } catch (error) {
+    console.warn('Prisma query failed in laporan page:', error);
+  }
+
+  const totalPages = Math.max(1, Math.ceil(total / limit));
 
   const buildUrl = (overrides: Record<string, string | undefined>) => {
     const p = { ...params, ...overrides };

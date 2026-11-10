@@ -18,40 +18,46 @@ export default async function LaporanDetailPage({ params }: PageProps) {
   const session = await getSession();
   const user = session ? { nama: session.nama, email: session.email, role: session.role } : null;
 
-  const report = await prisma.report.findUnique({
-    where: { id },
-    select: {
-      id: true,
-      judul: true,
-      deskripsi: true,
-      alamat: true,
-      lat: true,
-      lng: true,
-      status: true,
-      alasanTolak: true,
-      createdAt: true,
-      updatedAt: true,
-      userId: true,
-      category: { select: { id: true, nama: true } },
-      department: { select: { id: true, nama: true, kontak: true } },
-      user: { select: { nama: true } },
-      photos: { select: { id: true, url: true, jenis: true }, orderBy: { createdAt: 'asc' } },
-      updates: {
-        select: {
-          id: true,
-          statusLama: true,
-          statusBaru: true,
-          catatan: true,
-          createdAt: true,
-          user: { select: { nama: true, role: true } },
-        },
-        orderBy: { createdAt: 'asc' },
-      },
-      rating: { select: { skor: true, komentar: true, createdAt: true } },
-    },
-  });
+  let report = null;
 
-  // Public can't see Baru/Ditolak reports
+  try {
+    report = await prisma.report.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        judul: true,
+        deskripsi: true,
+        alamat: true,
+        lat: true,
+        lng: true,
+        status: true,
+        alasanTolak: true,
+        createdAt: true,
+        updatedAt: true,
+        userId: true,
+        category: { select: { id: true, nama: true } },
+        department: { select: { id: true, nama: true, kontak: true } },
+        user: { select: { nama: true } },
+        photos: { select: { id: true, url: true, jenis: true }, orderBy: { createdAt: 'asc' } },
+        updates: {
+          select: {
+            id: true,
+            statusLama: true,
+            statusBaru: true,
+            catatan: true,
+            createdAt: true,
+            user: { select: { nama: true, role: true } },
+          },
+          orderBy: { createdAt: 'asc' },
+        },
+        rating: { select: { skor: true, komentar: true, createdAt: true } },
+      },
+    });
+  } catch (error) {
+    console.warn('Prisma query failed in public detail:', error);
+  }
+
+  // Public can't see Baru/Ditolak reports or non-existent
   if (!report || report.status === 'Baru' || report.status === 'Ditolak') {
     notFound();
   }

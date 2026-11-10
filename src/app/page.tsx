@@ -9,30 +9,49 @@ import { formatDate } from '@/lib/utils';
 export default async function HomePage() {
   const session = await getSession();
 
-  // Get quick stats matching the 3 cards in the design:
-  // 1. Laporan masuk (total verified/active)
-  // 2. Sedang diproses
-  // 3. Selesai ditangani
-  const [laporanMasuk, sedangDiproses, selesaiDitangani] = await Promise.all([
-    prisma.report.count({ where: { status: { notIn: ['Ditolak'] } } }),
-    prisma.report.count({ where: { status: 'Diproses' } }),
-    prisma.report.count({ where: { status: 'Selesai' } }),
-  ]);
+  let laporanMasuk = 0;
+  let sedangDiproses = 0;
+  let selesaiDitangani = 0;
+  let recentReports: Array<{
+    id: string;
+    judul: string;
+    alamat: string;
+    status: any;
+    createdAt: Date;
+    category: { nama: string };
+  }> = [];
+  let dbConnected = true;
 
-  // Get recent reports for the list
-  const recentReports = await prisma.report.findMany({
-    where: { status: { in: ['Terverifikasi', 'Diproses', 'Selesai'] } },
-    take: 6,
-    orderBy: { createdAt: 'desc' },
-    select: {
-      id: true,
-      judul: true,
-      alamat: true,
-      status: true,
-      createdAt: true,
-      category: { select: { nama: true } },
-    },
-  });
+  try {
+    const [counts, reports] = await Promise.all([
+      Promise.all([
+        prisma.report.count({ where: { status: { notIn: ['Ditolak'] } } }),
+        prisma.report.count({ where: { status: 'Diproses' } }),
+        prisma.report.count({ where: { status: 'Selesai' } }),
+      ]),
+      prisma.report.findMany({
+        where: { status: { in: ['Terverifikasi', 'Diproses', 'Selesai'] } },
+        take: 6,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          judul: true,
+          alamat: true,
+          status: true,
+          createdAt: true,
+          category: { select: { nama: true } },
+        },
+      }),
+    ]);
+
+    laporanMasuk = counts[0];
+    sedangDiproses = counts[1];
+    selesaiDitangani = counts[2];
+    recentReports = reports;
+  } catch (error) {
+    dbConnected = false;
+    console.warn('Database query skipped or not connected:', error);
+  }
 
   const user = session ? { nama: session.nama, email: session.email, role: session.role } : null;
 
@@ -41,6 +60,18 @@ export default async function HomePage() {
       <Header user={user} />
 
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-10">
+        {!dbConnected && (
+          <div className="mb-6 bg-amber-50 border border-amber-200 rounded-xl p-4 text-amber-900 text-sm flex items-start gap-3">
+            <span className="text-xl">⚠️</span>
+            <div>
+              <p className="font-semibold">Database Belum Terhubung</p>
+              <p className="text-amber-700 text-xs mt-0.5">
+                Aplikasi berjalan dalam mode pratinjau. Pastikan file <code className="bg-amber-100 px-1 py-0.5 rounded">.env</code> memiliki koneksi PostgreSQL yang aktif dan jalankan migrasi database (<code className="bg-amber-100 px-1 py-0.5 rounded">npx prisma migrate dev</code>) untuk mengaktifkan seluruh fitur.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Hero Section */}
         <div className="mb-10">
           <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight mb-3">
