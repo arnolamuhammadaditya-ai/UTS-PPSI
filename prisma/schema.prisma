@@ -1,0 +1,152 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  warga
+  petugas
+  admin
+}
+
+enum ReportStatus {
+  Baru
+  Terverifikasi
+  Diproses
+  Selesai
+  Ditolak
+}
+
+enum PhotoType {
+  awal
+  bukti
+}
+
+model User {
+  id           String   @id @default(cuid())
+  nama         String
+  email        String   @unique
+  noHp         String?  @map("no_hp")
+  passwordHash String   @map("password_hash")
+  role         Role     @default(warga)
+  departmentId String?  @map("department_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  department    Department?    @relation("DepartmentOfficers", fields: [departmentId], references: [id])
+  reports       Report[]       @relation("UserReports")
+  reportUpdates ReportUpdate[] @relation("UserUpdates")
+  assignedReports Report[]     @relation("AssignedOfficer")
+  ratings       Rating[]
+
+  @@index([email])
+  @@map("users")
+}
+
+model Department {
+  id        String   @id @default(cuid())
+  nama      String
+  kontak    String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  categories Category[]
+  reports    Report[]
+  officers   User[]     @relation("DepartmentOfficers")
+
+  @@map("departments")
+}
+
+model Category {
+  id           String   @id @default(cuid())
+  nama         String
+  departmentId String?  @map("department_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  department Department? @relation(fields: [departmentId], references: [id])
+  reports    Report[]
+
+  @@map("categories")
+}
+
+model Report {
+  id           String       @id @default(cuid())
+  userId       String       @map("user_id")
+  categoryId   String       @map("category_id")
+  departmentId String?      @map("department_id")
+  assignedTo   String?      @map("assigned_to")
+  judul        String
+  deskripsi    String
+  alamat       String
+  lat          Float?
+  lng          Float?
+  status       ReportStatus @default(Baru)
+  alasanTolak  String?      @map("alasan_tolak")
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+
+  user         User          @relation("UserReports", fields: [userId], references: [id])
+  category     Category      @relation(fields: [categoryId], references: [id])
+  department   Department?   @relation(fields: [departmentId], references: [id])
+  assignedUser User?         @relation("AssignedOfficer", fields: [assignedTo], references: [id])
+  photos       ReportPhoto[]
+  updates      ReportUpdate[]
+  rating       Rating?
+
+  @@index([status])
+  @@index([categoryId])
+  @@index([createdAt])
+  @@index([userId])
+  @@map("reports")
+}
+
+model ReportPhoto {
+  id        String    @id @default(cuid())
+  reportId  String    @map("report_id")
+  url       String
+  jenis     PhotoType @default(awal)
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@map("report_photos")
+}
+
+model ReportUpdate {
+  id         String       @id @default(cuid())
+  reportId   String       @map("report_id")
+  userId     String       @map("user_id")
+  statusLama ReportStatus? @map("status_lama")
+  statusBaru ReportStatus @map("status_baru")
+  catatan    String?
+  createdAt  DateTime     @default(now()) @map("created_at")
+
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  user   User   @relation("UserUpdates", fields: [userId], references: [id])
+
+  @@index([reportId])
+  @@map("report_updates")
+}
+
+model Rating {
+  id        String   @id @default(cuid())
+  reportId  String   @unique @map("report_id")
+  userId    String   @map("user_id")
+  skor      Int
+  komentar  String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@map("ratings")
+}
+
