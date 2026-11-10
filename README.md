@@ -2,6 +2,7 @@
 
 > **Portal Pengaduan Warga untuk Smart City**  
 > Dikembangkan untuk Ujian Tengah Semester — Mata Kuliah Proyek Pengembangan Sistem Informasi  
+> **Oleh:** Arnol Muhammad Aditya & Dr. Erliyan Redy Susanto, M.Kom  
 > Universitas Teknokrat Indonesia | 2026
 
 ---

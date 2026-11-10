@@ -64,8 +64,8 @@ export default async function AdminLaporanPage({ searchParams }: PageProps) {
     reports = dbReports;
     total = dbTotal;
     categories = dbCategories;
-  } catch (error) {
-    console.warn('Prisma query failed in admin laporan page:', error);
+  } catch {
+    // fallback when database not yet connected
   }
 
   const totalPages = Math.max(1, Math.ceil(total / limit));

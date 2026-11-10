@@ -55,19 +55,25 @@ export default function Header({ user: initialUser }: HeaderProps = {}) {
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16">
           {/* Logo Section */}
-          <div className="flex items-center gap-3">
-            {/* Logo Pemda */}
-            <div className="border border-dashed border-gray-400 rounded px-2 py-1 text-[10px] font-semibold tracking-wider text-gray-600 leading-tight text-center">
-              LOGO<br />PEMDA
-            </div>
+          <Link href="/" className="flex items-center gap-2.5 group">
+            {/* Logo Pemda Lampung */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo-lampung.png"
+              alt="Logo Pemda Lampung"
+              className="h-10 w-auto max-w-[40px] object-contain"
+            />
             {/* Logo UTI */}
-            <div className="border border-dashed border-gray-400 rounded px-2 py-1 text-[10px] font-semibold tracking-wider text-gray-600 leading-tight text-center">
-              LOGO<br />UTI
-            </div>
-            <Link href="/" className="font-bold text-lg text-gray-900 tracking-tight ml-1">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo-teknokrat.png"
+              alt="Logo Universitas Teknokrat Indonesia"
+              className="h-10 w-auto max-w-[40px] object-contain"
+            />
+            <span className="font-bold text-lg text-gray-900 tracking-tight ml-1 group-hover:text-primary-600 transition-colors">
               SiLapor Kota
-            </Link>
-          </div>
+            </span>
+          </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6 text-sm">

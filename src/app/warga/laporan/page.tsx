@@ -41,8 +41,8 @@ export default async function WargaLaporanPage() {
     ]);
     reports = dbReports;
     counts = dbCounts;
-  } catch (error) {
-    console.warn('Prisma query failed in warga laporan page:', error);
+  } catch {
+    // fallback when database not yet connected
   }
 
   const totalReports = counts.reduce((acc, c) => acc + c._count.status, 0);

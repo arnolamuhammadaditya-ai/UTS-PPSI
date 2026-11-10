@@ -1,5 +1,5 @@
 export default function Footer() {
-  const studentName = process.env.NEXT_PUBLIC_STUDENT_NAME || '[Nama Mahasiswa]';
+  const studentName = process.env.NEXT_PUBLIC_STUDENT_NAME || 'Arnol Muhammad Aditya';
 
   return (
     <footer className="bg-[#111827] text-gray-400 py-4 mt-auto">

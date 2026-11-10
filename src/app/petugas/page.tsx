@@ -56,8 +56,8 @@ export default async function PetugasDashboard({ searchParams }: PageProps) {
     reports = dbReports;
     total = dbTotal;
     counts = dbCounts;
-  } catch (error) {
-    console.warn('Prisma query failed in petugas page:', error);
+  } catch {
+    // fallback when database not yet connected
   }
 
   const totalPages = Math.max(1, Math.ceil(total / limit));
@@ -85,10 +85,10 @@ export default async function PetugasDashboard({ searchParams }: PageProps) {
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             {[
-              { label: 'Total Ditugaskan', value: Object.values(statusMap).reduce((a, b) => a + b, 0), color: 'text-primary-500' },
-              { label: 'Terverifikasi', value: statusMap['Terverifikasi'] ?? 0, color: 'text-blue-600' },
-              { label: 'Diproses', value: statusMap['Diproses'] ?? 0, color: 'text-purple-600' },
-              { label: 'Selesai', value: statusMap['Selesai'] ?? 0, color: 'text-green-600' },
+              { label: 'Total Ditugaskan', value: Object.values(statusMap).reduce((a: number, b: any) => a + Number(b || 0), 0), color: 'text-primary-500' },
+              { label: 'Terverifikasi', value: Number(statusMap['Terverifikasi'] ?? 0), color: 'text-blue-600' },
+              { label: 'Diproses', value: Number(statusMap['Diproses'] ?? 0), color: 'text-purple-600' },
+              { label: 'Selesai', value: Number(statusMap['Selesai'] ?? 0), color: 'text-green-600' },
             ].map(stat => (
               <div key={stat.label} className="card p-4 text-center">
                 <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>

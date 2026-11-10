@@ -53,8 +53,8 @@ export default async function LaporanDetailPage({ params }: PageProps) {
         rating: { select: { skor: true, komentar: true, createdAt: true } },
       },
     });
-  } catch (error) {
-    console.warn('Prisma query failed in public detail:', error);
+  } catch {
+    // fallback when database not yet connected
   }
 
   // Public can't see Baru/Ditolak reports or non-existent

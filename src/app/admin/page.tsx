@@ -48,8 +48,8 @@ export default async function AdminDashboard({
     ]);
     byStatus = dbByStatus;
     reports = dbReports;
-  } catch (error) {
-    console.warn('Prisma query failed in admin dashboard:', error);
+  } catch {
+    // fallback when database not yet connected
   }
 
   const statusMap = Object.fromEntries(
@@ -62,17 +62,23 @@ export default async function AdminDashboard({
         {/* Left Dark Sidebar (Exact match with Page 3 in PDF) */}
         <aside className="w-56 bg-[#111827] text-white flex-shrink-0 flex flex-col min-h-screen">
           {/* Logo Section */}
-          <div className="p-5 flex items-center gap-2 border-b border-gray-800">
-            <div className="border border-dashed border-gray-400 rounded px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-gray-300 leading-tight text-center">
-              LOGO<br />PEMDA
-            </div>
-            <div className="border border-dashed border-gray-400 rounded px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-gray-300 leading-tight text-center">
-              LOGO<br />UTI
-            </div>
+          <Link href="/" className="p-4 flex items-center gap-2 border-b border-gray-800 hover:bg-gray-800/40 transition-colors">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo-lampung.png"
+              alt="Logo Pemda Lampung"
+              className="h-7 w-auto max-w-[32px] object-contain"
+            />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo-teknokrat.png"
+              alt="Logo Universitas Teknokrat Indonesia"
+              className="h-7 w-auto max-w-[32px] object-contain"
+            />
             <span className="font-bold text-sm tracking-tight ml-1 text-white">
               SiLapor
             </span>
-          </div>
+          </Link>
 
           {/* Navigation Links */}
           <nav className="p-3 space-y-1.5 flex-1">

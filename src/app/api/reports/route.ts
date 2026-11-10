@@ -5,6 +5,8 @@ import { reportQuerySchema, createReportSchema } from '@/lib/validations';
 import { successResponse, errorResponse, unauthorizedResponse } from '@/lib/api-response';
 import { uploadMultiplePhotos } from '@/lib/upload';
 
+import { ReportStatus } from '@prisma/client';
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -30,7 +32,7 @@ export async function GET(request: NextRequest) {
       // Public only sees verified+ reports (not Baru/Ditolak)
       status: status
         ? { equals: status }
-        : { in: ['Terverifikasi', 'Diproses', 'Selesai'] as const },
+        : { in: ['Terverifikasi', 'Diproses', 'Selesai'] as ReportStatus[] },
       ...(categoryId ? { categoryId } : {}),
       ...(q ? { judul: { contains: q, mode: 'insensitive' as const } } : {}),
       ...(startDate || endDate

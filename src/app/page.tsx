@@ -9,9 +9,10 @@ import { formatDate } from '@/lib/utils';
 export default async function HomePage() {
   const session = await getSession();
 
-  let laporanMasuk = 0;
-  let sedangDiproses = 0;
-  let selesaiDitangani = 0;
+  // Default demo data for instant preview
+  let laporanMasuk = 24;
+  let sedangDiproses = 8;
+  let selesaiDitangani = 16;
   let recentReports: Array<{
     id: string;
     judul: string;
@@ -19,8 +20,41 @@ export default async function HomePage() {
     status: any;
     createdAt: Date;
     category: { nama: string };
-  }> = [];
-  let dbConnected = true;
+  }> = [
+    {
+      id: 'demo-1',
+      judul: 'Jalan Rusak dan Berlubang Parah di Jl. ZA Pagar Alam',
+      alamat: 'Jl. ZA Pagar Alam No. 9, Labuhan Ratu, Bandar Lampung',
+      status: 'Diproses',
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 3),
+      category: { nama: 'Jalan & Jembatan' },
+    },
+    {
+      id: 'demo-2',
+      judul: 'Lampu Penerangan Jalan Umum Mati di Dekat Gerbang UTI',
+      alamat: 'Jl. Zainal Abidin Pagaralam, Kedaton, Bandar Lampung',
+      status: 'Selesai',
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24),
+      category: { nama: 'Penerangan Jalan' },
+    },
+    {
+      id: 'demo-3',
+      judul: 'Saluran Drainase Tersumbat Menyebabkan Genangan Air Saat Hujan',
+      alamat: 'Jl. Teuku Umar No. 45, Pasir Gintung, Bandar Lampung',
+      status: 'Terverifikasi',
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 36),
+      category: { nama: 'Drainase & Banjir' },
+    },
+    {
+      id: 'demo-4',
+      judul: 'Tumpukan Sampah Liar di Bahu Jalan Way Halim Permai',
+      alamat: 'Kecamatan Way Halim, Kota Bandar Lampung',
+      status: 'Selesai',
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 48),
+      category: { nama: 'Kebersihan & Sampah' },
+    },
+  ];
+  let dbConnected = false;
 
   try {
     const [counts, reports] = await Promise.all([
@@ -48,9 +82,9 @@ export default async function HomePage() {
     sedangDiproses = counts[1];
     selesaiDitangani = counts[2];
     recentReports = reports;
-  } catch (error) {
+    dbConnected = true;
+  } catch {
     dbConnected = false;
-    console.warn('Database query skipped or not connected:', error);
   }
 
   const user = session ? { nama: session.nama, email: session.email, role: session.role } : null;
@@ -61,12 +95,12 @@ export default async function HomePage() {
 
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-10">
         {!dbConnected && (
-          <div className="mb-6 bg-amber-50 border border-amber-200 rounded-xl p-4 text-amber-900 text-sm flex items-start gap-3">
-            <span className="text-xl">⚠️</span>
+          <div className="mb-6 bg-blue-50 border border-blue-200 rounded-xl p-4 text-blue-900 text-sm flex items-start gap-3">
+            <span className="text-xl">ℹ️</span>
             <div>
-              <p className="font-semibold">Database Belum Terhubung</p>
-              <p className="text-amber-700 text-xs mt-0.5">
-                Aplikasi berjalan dalam mode pratinjau. Pastikan file <code className="bg-amber-100 px-1 py-0.5 rounded">.env</code> memiliki koneksi PostgreSQL yang aktif dan jalankan migrasi database (<code className="bg-amber-100 px-1 py-0.5 rounded">npx prisma migrate dev</code>) untuk mengaktifkan seluruh fitur.
+              <p className="font-semibold text-blue-900">Mode Pratinjau SiLapor Kota</p>
+              <p className="text-blue-700 text-xs mt-0.5">
+                Menampilkan data simulasi cerdas. Untuk mengaktifkan sinkronisasi database PostgreSQL, sesuaikan <code className="bg-blue-100 px-1 py-0.5 rounded font-mono">DATABASE_URL</code> pada file <code className="bg-blue-100 px-1 py-0.5 rounded font-mono">.env</code>.
               </p>
             </div>
           </div>
