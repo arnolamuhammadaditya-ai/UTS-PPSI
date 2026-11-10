@@ -1,20 +1,25 @@
 import Link from 'next/link';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import StatusChip from '@/components/ui/StatusChip';
 import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { formatDate } from '@/lib/utils';
 
 export default async function HomePage() {
   const session = await getSession();
-  
-  // Get quick stats
-  const [totalReports, selesai, diproses] = await Promise.all([
-    prisma.report.count({ where: { status: { notIn: ['Baru'] } } }),
-    prisma.report.count({ where: { status: 'Selesai' } }),
+
+  // Get quick stats matching the 3 cards in the design:
+  // 1. Laporan masuk (total verified/active)
+  // 2. Sedang diproses
+  // 3. Selesai ditangani
+  const [laporanMasuk, sedangDiproses, selesaiDitangani] = await Promise.all([
+    prisma.report.count({ where: { status: { notIn: ['Ditolak'] } } }),
     prisma.report.count({ where: { status: 'Diproses' } }),
+    prisma.report.count({ where: { status: 'Selesai' } }),
   ]);
 
-  // Get recent reports for display
+  // Get recent reports for the list
   const recentReports = await prisma.report.findMany({
     where: { status: { in: ['Terverifikasi', 'Diproses', 'Selesai'] } },
     take: 6,
@@ -26,163 +31,113 @@ export default async function HomePage() {
       status: true,
       createdAt: true,
       category: { select: { nama: true } },
-      photos: { where: { jenis: 'awal' }, take: 1, select: { url: true } },
     },
   });
 
   const user = session ? { nama: session.nama, email: session.email, role: session.role } : null;
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gray-50">
       <Header user={user} />
-      
-      {/* Hero Section */}
-      <section className="bg-gradient-to-br from-primary-600 via-primary-500 to-primary-700 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 bg-white/10 rounded-full px-4 py-1.5 text-sm mb-6">
-              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-              Sistem aktif dan transparan
-            </div>
-            <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-4">
-              Laporkan Masalah Kota,{' '}
-              <span className="text-yellow-300">Bersama Wujudkan</span>{' '}
-              Kota yang Lebih Baik
-            </h1>
-            <p className="text-blue-100 text-lg leading-relaxed mb-8">
-              SiLapor Kota memudahkan warga melaporkan masalah fasilitas publik — jalan rusak, lampu mati, 
-              sampah menumpuk — dan memantau perkembangannya secara real-time.
+
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-10">
+        {/* Hero Section */}
+        <div className="mb-10">
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight mb-3">
+            Laporkan masalah kota, pantau sampai selesai
+          </h1>
+          <p className="text-gray-600 text-base sm:text-lg mb-6 max-w-2xl">
+            Foto, tandai lokasi, dan ikuti status penanganan laporanmu secara transparan.
+          </p>
+          <div>
+            <Link
+              href={session ? '/warga/laporan/buat' : '/login'}
+              className="inline-block bg-[#0B5CAD] hover:bg-[#094d92] text-white font-medium px-6 py-3 rounded-lg shadow-sm transition-colors"
+            >
+              Buat Laporan
+            </Link>
+          </div>
+        </div>
+
+        {/* 3 Summary Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-12">
+          {/* Card 1: Laporan masuk */}
+          <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+            <p className="text-3xl sm:text-4xl font-bold text-[#0B5CAD] mb-1">
+              {laporanMasuk.toLocaleString('id-ID')}
             </p>
-            <div className="flex flex-wrap gap-3">
-              {session ? (
-                <Link href="/warga/laporan/buat" className="bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold px-6 py-3 rounded-xl text-base transition-colors">
-                  Buat Laporan
-                </Link>
-              ) : (
-                <>
-                  <Link href="/register" className="bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold px-6 py-3 rounded-xl text-base transition-colors">
-                    Mulai Melapor
-                  </Link>
-                  <Link href="/login" className="bg-white/10 hover:bg-white/20 text-white font-semibold px-6 py-3 rounded-xl text-base transition-colors border border-white/30">
-                    Sudah Punya Akun
-                  </Link>
-                </>
-              )}
-              <Link href="/laporan" className="bg-transparent hover:bg-white/10 text-white font-semibold px-6 py-3 rounded-xl text-base transition-colors border border-white/40">
-                Lihat Laporan Publik
-              </Link>
-            </div>
+            <p className="text-gray-600 text-sm font-medium">Laporan masuk</p>
+          </div>
+
+          {/* Card 2: Sedang diproses */}
+          <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+            <p className="text-3xl sm:text-4xl font-bold text-[#0B5CAD] mb-1">
+              {sedangDiproses.toLocaleString('id-ID')}
+            </p>
+            <p className="text-gray-600 text-sm font-medium">Sedang diproses</p>
+          </div>
+
+          {/* Card 3: Selesai ditangani */}
+          <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+            <p className="text-3xl sm:text-4xl font-bold text-[#0B5CAD] mb-1">
+              {selesaiDitangani.toLocaleString('id-ID')}
+            </p>
+            <p className="text-gray-600 text-sm font-medium">Selesai ditangani</p>
           </div>
         </div>
-      </section>
 
-      {/* Stats */}
-      <section className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="grid grid-cols-3 gap-6 text-center">
-            <div>
-              <p className="text-3xl font-bold text-primary-500">{totalReports.toLocaleString('id-ID')}</p>
-              <p className="text-gray-500 text-sm mt-1">Total Laporan</p>
-            </div>
-            <div>
-              <p className="text-3xl font-bold text-green-600">{selesai.toLocaleString('id-ID')}</p>
-              <p className="text-gray-500 text-sm mt-1">Laporan Selesai</p>
-            </div>
-            <div>
-              <p className="text-3xl font-bold text-purple-600">{diproses.toLocaleString('id-ID')}</p>
-              <p className="text-gray-500 text-sm mt-1">Sedang Diproses</p>
-            </div>
+        {/* Laporan Terbaru Section */}
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
+              Laporan terbaru
+            </h2>
+            <Link
+              href="/laporan"
+              className="text-sm font-medium text-[#0B5CAD] hover:underline"
+            >
+              Lihat semua &rarr;
+            </Link>
           </div>
-        </div>
-      </section>
 
-      {/* How it Works */}
-      <section className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold text-center text-gray-900 mb-10">Cara Kerja SiLapor Kota</h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {[
-              { step: '1', icon: '📸', title: 'Buat Laporan', desc: 'Foto masalah, isi deskripsi dan lokasi. Proses kurang dari 2 menit.' },
-              { step: '2', icon: '✅', title: 'Admin Verifikasi', desc: 'Admin Pemda memverifikasi dan mendisposisikan ke dinas terkait.' },
-              { step: '3', icon: '🔧', title: 'Petugas Menangani', desc: 'Petugas dinas menindaklanjuti dan mengunggah bukti penyelesaian.' },
-              { step: '4', icon: '⭐', title: 'Beri Penilaian', desc: 'Setelah selesai, warga memberikan rating untuk evaluasi layanan.' },
-            ].map((item) => (
-              <div key={item.step} className="text-center card p-6">
-                <div className="w-12 h-12 rounded-full bg-primary-50 flex items-center justify-center text-2xl mx-auto mb-3">
-                  {item.icon}
-                </div>
-                <div className="inline-block bg-primary-500 text-white text-xs font-bold px-2 py-0.5 rounded-full mb-2">
-                  Langkah {item.step}
-                </div>
-                <h3 className="font-semibold text-gray-900 mb-2">{item.title}</h3>
-                <p className="text-gray-500 text-sm leading-relaxed">{item.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Recent Reports */}
-      {recentReports.length > 0 && (
-        <section className="py-16 bg-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-2xl font-bold text-gray-900">Laporan Terkini</h2>
-              <Link href="/laporan" className="text-primary-500 hover:text-primary-700 text-sm font-medium">
-                Lihat Semua →
-              </Link>
+          {recentReports.length === 0 ? (
+            <div className="bg-white rounded-xl border border-gray-200 p-10 text-center text-gray-500">
+              Belum ada laporan yang dipublikasikan.
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          ) : (
+            <div className="space-y-3">
               {recentReports.map((report) => (
-                <Link href={`/laporan/${report.id}`} key={report.id}>
-                  <div className="card overflow-hidden hover:shadow-md transition-shadow cursor-pointer h-full">
-                    {report.photos[0] ? (
-                      <div className="relative h-48 bg-gray-200">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={report.photos[0].url}
-                          alt={report.judul}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    ) : (
-                      <div className="h-48 bg-gray-100 flex items-center justify-center">
-                        <span className="text-4xl">📋</span>
-                      </div>
-                    )}
-                    <div className="p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full font-medium">
-                          {report.category.nama}
-                        </span>
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                          report.status === 'Selesai' ? 'bg-green-100 text-green-700' :
-                          report.status === 'Diproses' ? 'bg-purple-100 text-purple-700' :
-                          'bg-blue-100 text-blue-700'
-                        }`}>
-                          {report.status}
-                        </span>
-                      </div>
-                      <h3 className="font-semibold text-gray-900 text-sm leading-tight mb-1 line-clamp-2">
+                <Link
+                  key={report.id}
+                  href={`/laporan/${report.id}`}
+                  className="block bg-white rounded-xl border border-gray-200 p-4 sm:p-5 hover:border-gray-300 hover:shadow-sm transition-all"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-semibold text-gray-900 text-base mb-1 truncate">
                         {report.judul}
                       </h3>
-                      <p className="text-gray-400 text-xs flex items-center gap-1">
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        </svg>
-                        {report.alamat}
+                      <p className="text-sm text-gray-500 truncate">
+                        <span className="font-medium text-gray-700">{report.category.nama}</span>
+                        {' · '}
+                        <span>{report.alamat}</span>
+                        {' · '}
+                        <span>{formatDate(report.createdAt)}</span>
                       </p>
+                    </div>
+
+                    <div className="flex-shrink-0">
+                      <StatusChip status={report.status} />
                     </div>
                   </div>
                 </Link>
               ))}
             </div>
-          </div>
-        </section>
-      )}
+          )}
+        </div>
+      </main>
 
       <Footer />
     </div>
   );
 }
-

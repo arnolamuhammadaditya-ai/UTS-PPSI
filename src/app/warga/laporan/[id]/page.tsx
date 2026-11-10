@@ -100,11 +100,9 @@ export default function WargaLaporanDetailPage({ params }: PageProps) {
     );
   }
 
-  const user = { nama: '', email: '', role: 'warga' };
-
   return (
     <div className="min-h-screen flex flex-col">
-      <Header user={user} />
+      <Header />
 
       <main className="flex-1 bg-gray-50">
         <div className="bg-white border-b">

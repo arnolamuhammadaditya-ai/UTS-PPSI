@@ -1,23 +1,41 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-interface HeaderProps {
-  user?: {
-    nama: string;
-    email: string;
-    role: string;
-  } | null;
+interface UserInfo {
+  nama: string;
+  email: string;
+  role: string;
 }
 
-export default function Header({ user }: HeaderProps) {
+interface HeaderProps {
+  /** Optional pre-loaded user (e.g. passed from a parent). If omitted, Header fetches from /api/auth/me. */
+  user?: UserInfo | null;
+}
+
+export default function Header({ user: initialUser }: HeaderProps = {}) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [user, setUser] = useState<UserInfo | null>(initialUser ?? null);
   const router = useRouter();
+
+  useEffect(() => {
+    // Only fetch if no initial user was provided
+    if (initialUser !== undefined) return;
+    fetch('/api/auth/me')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.success && data?.data?.user) {
+          setUser(data.data.user);
+        }
+      })
+      .catch(() => {/* not logged in */});
+  }, [initialUser]);
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
+    setUser(null);
     router.push('/');
     router.refresh();
   };
@@ -33,118 +51,132 @@ export default function Header({ user }: HeaderProps) {
   };
 
   return (
-    <header className="bg-primary-500 shadow-md sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16">
           {/* Logo Section */}
           <div className="flex items-center gap-3">
-            {/* Pemda Logo */}
-            <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center flex-shrink-0 shadow">
-              <svg viewBox="0 0 40 40" className="w-8 h-8" fill="none">
-                <circle cx="20" cy="20" r="18" fill="#0B5CAD" />
-                <path d="M20 8L24 16H28L22 20L24 28L20 24L16 28L18 20L12 16H16L20 8Z" fill="gold" />
-                <path d="M12 30H28" stroke="gold" strokeWidth="2" strokeLinecap="round" />
-              </svg>
+            {/* Logo Pemda */}
+            <div className="border border-dashed border-gray-400 rounded px-2 py-1 text-[10px] font-semibold tracking-wider text-gray-600 leading-tight text-center">
+              LOGO<br />PEMDA
             </div>
-            {/* UTI Logo */}
-            <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center flex-shrink-0 shadow overflow-hidden">
-              <div className="w-full h-full flex items-center justify-center">
-                <span className="text-primary-500 font-black text-xs leading-none text-center">UTI</span>
-              </div>
+            {/* Logo UTI */}
+            <div className="border border-dashed border-gray-400 rounded px-2 py-1 text-[10px] font-semibold tracking-wider text-gray-600 leading-tight text-center">
+              LOGO<br />UTI
             </div>
-            <Link href="/" className="flex flex-col leading-none">
-              <span className="text-white font-bold text-lg leading-tight">SiLapor Kota</span>
-              <span className="text-blue-200 text-xs">Portal Pengaduan Warga</span>
+            <Link href="/" className="font-bold text-lg text-gray-900 tracking-tight ml-1">
+              SiLapor Kota
             </Link>
           </div>
 
-          {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-6">
-            <Link href="/laporan" className="text-blue-100 hover:text-white text-sm font-medium transition-colors">
-              Laporan Publik
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center gap-6 text-sm">
+            <Link
+              href="/laporan"
+              className="text-primary-500 hover:text-primary-600 font-medium transition-colors"
+            >
+              Laporan
+            </Link>
+            <Link
+              href="/peta"
+              className="text-primary-500 hover:text-primary-600 font-medium transition-colors"
+            >
+              Peta
+            </Link>
+
+            {user ? (
+              <div className="flex items-center gap-4 pl-2">
+                {getDashboardLink() && (
+                  <Link
+                    href={getDashboardLink()!}
+                    className="text-gray-700 hover:text-primary-500 font-medium transition-colors"
+                  >
+                    Dashboard ({user.role})
+                  </Link>
+                )}
+                <span className="text-gray-300">|</span>
+                <span className="text-gray-700 text-sm font-medium">{user.nama}</span>
+                <button
+                  onClick={handleLogout}
+                  className="border border-gray-300 hover:bg-gray-50 text-gray-700 px-3 py-1 rounded text-sm transition-colors"
+                >
+                  Keluar
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                className="border border-gray-400 hover:border-gray-600 text-gray-800 px-4 py-1.5 rounded text-sm font-medium transition-colors"
+              >
+                Masuk
+              </Link>
+            )}
+          </nav>
+
+          {/* Mobile menu hamburger */}
+          <div className="md:hidden flex items-center gap-2">
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="p-2 text-gray-600 hover:text-gray-900"
+              aria-label="Toggle menu"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {menuOpen ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                )}
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile dropdown */}
+        {menuOpen && (
+          <div className="md:hidden border-t border-gray-200 py-3 space-y-2">
+            <Link
+              href="/laporan"
+              onClick={() => setMenuOpen(false)}
+              className="block text-primary-500 px-2 py-1 font-medium"
+            >
+              Laporan
+            </Link>
+            <Link
+              href="/peta"
+              onClick={() => setMenuOpen(false)}
+              className="block text-primary-500 px-2 py-1 font-medium"
+            >
+              Peta
             </Link>
             {user ? (
               <>
                 {getDashboardLink() && (
-                  <Link href={getDashboardLink()!} className="text-blue-100 hover:text-white text-sm font-medium transition-colors">
-                    Dashboard
+                  <Link
+                    href={getDashboardLink()!}
+                    onClick={() => setMenuOpen(false)}
+                    className="block text-gray-700 px-2 py-1 font-medium"
+                  >
+                    Dashboard ({user.role})
                   </Link>
                 )}
-                <div className="flex items-center gap-3 pl-3 border-l border-blue-400">
-                  <div className="text-right">
-                    <p className="text-white text-sm font-medium leading-tight">{user.nama}</p>
-                    <p className="text-blue-200 text-xs capitalize">{user.role}</p>
-                  </div>
+                <div className="pt-2 border-t border-gray-100 flex justify-between items-center px-2">
+                  <span className="text-sm font-medium text-gray-700">{user.nama}</span>
                   <button
                     onClick={handleLogout}
-                    className="bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+                    className="border border-gray-300 text-xs px-2.5 py-1 rounded"
                   >
                     Keluar
                   </button>
                 </div>
               </>
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="pt-2 border-t border-gray-100 px-2">
                 <Link
                   href="/login"
-                  className="text-blue-100 hover:text-white text-sm font-medium transition-colors"
+                  onClick={() => setMenuOpen(false)}
+                  className="block text-center border border-gray-400 py-1.5 rounded text-sm font-medium text-gray-800"
                 >
                   Masuk
-                </Link>
-                <Link
-                  href="/register"
-                  className="bg-white text-primary-500 hover:bg-blue-50 px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors"
-                >
-                  Daftar
-                </Link>
-              </div>
-            )}
-          </nav>
-
-          {/* Mobile Menu Button */}
-          <button
-            className="md:hidden text-white p-2"
-            onClick={() => setMenuOpen(!menuOpen)}
-            aria-label="Toggle menu"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              {menuOpen ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              )}
-            </svg>
-          </button>
-        </div>
-
-        {/* Mobile Menu */}
-        {menuOpen && (
-          <div className="md:hidden border-t border-blue-400 py-3 space-y-2">
-            <Link href="/laporan" className="block text-blue-100 hover:text-white px-2 py-2 text-sm" onClick={() => setMenuOpen(false)}>
-              Laporan Publik
-            </Link>
-            {user ? (
-              <>
-                {getDashboardLink() && (
-                  <Link href={getDashboardLink()!} className="block text-blue-100 hover:text-white px-2 py-2 text-sm" onClick={() => setMenuOpen(false)}>
-                    Dashboard
-                  </Link>
-                )}
-                <div className="px-2 pt-2 border-t border-blue-400">
-                  <p className="text-white text-sm font-medium">{user.nama}</p>
-                  <p className="text-blue-200 text-xs capitalize mb-2">{user.role}</p>
-                  <button onClick={handleLogout} className="text-white bg-white/10 px-3 py-1.5 rounded-lg text-sm w-full text-left">
-                    Keluar
-                  </button>
-                </div>
-              </>
-            ) : (
-              <div className="px-2 pt-2 border-t border-blue-400 flex gap-2">
-                <Link href="/login" className="text-blue-100 hover:text-white px-3 py-2 text-sm" onClick={() => setMenuOpen(false)}>
-                  Masuk
-                </Link>
-                <Link href="/register" className="bg-white text-primary-500 px-3 py-2 rounded-lg text-sm font-medium" onClick={() => setMenuOpen(false)}>
-                  Daftar
                 </Link>
               </div>
             )}
@@ -154,4 +186,3 @@ export default function Header({ user }: HeaderProps) {
     </header>
   );
 }
-

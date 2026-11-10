@@ -17,8 +17,6 @@ export default function AdminKategoriPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  const user = { nama: '', email: '', role: 'admin' };
-
   const load = () => {
     Promise.all([
       fetch('/api/admin/categories').then(r => r.json()),
@@ -57,7 +55,7 @@ export default function AdminKategoriPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header user={user} />
+      <Header />
       <div className="flex flex-1">
         <aside className="hidden md:flex w-56 bg-white border-r flex-col flex-shrink-0">
           <div className="p-4 border-b"><p className="font-semibold text-gray-900 text-sm">Dashboard Admin</p></div>

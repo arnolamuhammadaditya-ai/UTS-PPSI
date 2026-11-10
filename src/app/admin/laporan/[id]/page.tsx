@@ -43,27 +43,15 @@ export default function AdminLaporanDetailPage({ params }: { params: Promise<{ i
   const [assignLoading, setAssignLoading] = useState(false);
   const [assignError, setAssignError] = useState('');
 
-  const user = { nama: '', email: '', role: 'admin' };
-
   useEffect(() => {
     params.then(({ id }) => {
-      Promise.all([
-        fetch(`/api/me/reports/${id}`).then(r => r.json()).catch(() => null),
-        // Try admin-level fetch (fallback to public detail)
-        fetch(`/api/reports/${id}`).then(r => r.json()).catch(() => null),
-      ]).then(([wargaData, publicData]) => {
-        // We need to fetch the report with admin level data
-        // Since there's no dedicated admin detail endpoint, use a workaround
-        setLoading(false);
-      });
-      // Fetch with admin privileges using a direct fetch
       fetch(`/api/admin/reports/${id}`)
         .then(r => r.json())
         .then(data => {
           if (data.success) setReport(data.data.report);
-          setLoading(false);
         })
-        .catch(() => setLoading(false));
+        .catch(() => {/* error handled by !report check */})
+        .finally(() => setLoading(false));
     });
 
     fetch('/api/admin/departments').then(r => r.json()).then(d => { if (d.success) setDepartments(d.data.departments); });
@@ -120,7 +108,7 @@ export default function AdminLaporanDetailPage({ params }: { params: Promise<{ i
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header user={user} />
+      <Header />
       <div className="flex flex-1">
         <aside className="hidden md:flex w-56 bg-white border-r flex-col flex-shrink-0">
           <div className="p-4 border-b"><p className="font-semibold text-gray-900 text-sm">Dashboard Admin</p></div>

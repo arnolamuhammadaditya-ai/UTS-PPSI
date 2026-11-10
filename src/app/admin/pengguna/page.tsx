@@ -21,7 +21,6 @@ export default function AdminPenggunaPage() {
   const [error, setError] = useState('');
   const [q, setQ] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
-  const user = { nama: '', email: '', role: 'admin' };
 
   const load = (search = q, role = roleFilter) => {
     const qs = new URLSearchParams({ limit: '50', ...(search ? { q: search } : {}), ...(role ? { role } : {}) }).toString();
@@ -68,7 +67,7 @@ export default function AdminPenggunaPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header user={user} />
+      <Header />
       <div className="flex flex-1">
         <aside className="hidden md:flex w-56 bg-white border-r flex-col flex-shrink-0">
           <div className="p-4 border-b"><p className="font-semibold text-gray-900 text-sm">Dashboard Admin</p></div>

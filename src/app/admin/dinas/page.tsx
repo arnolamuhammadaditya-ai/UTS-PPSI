@@ -14,7 +14,6 @@ export default function AdminDinasPage() {
   const [form, setForm] = useState({ nama: '', kontak: '' });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const user = { nama: '', email: '', role: 'admin' };
 
   const load = () => {
     fetch('/api/admin/departments').then(r => r.json()).then(d => { if (d.success) setDepartments(d.data.departments); setLoading(false); });
@@ -48,7 +47,7 @@ export default function AdminDinasPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header user={user} />
+      <Header />
       <div className="flex flex-1">
         <aside className="hidden md:flex w-56 bg-white border-r flex-col flex-shrink-0">
           <div className="p-4 border-b"><p className="font-semibold text-gray-900 text-sm">Dashboard Admin</p></div>
