@@ -46,18 +46,23 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       {/* Header minimal */}
-      <header className="bg-primary-500 py-4">
+      <header className="bg-white border-b border-gray-200 py-3">
         <div className="max-w-7xl mx-auto px-4 flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
-            <svg viewBox="0 0 40 40" className="w-6 h-6" fill="none">
-              <circle cx="20" cy="20" r="18" fill="#0B5CAD" />
-              <path d="M20 8L24 16H28L22 20L24 28L20 24L16 28L18 20L12 16H16L20 8Z" fill="gold" />
-            </svg>
-          </div>
-          <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
-            <span className="text-primary-500 font-black text-xs">UTI</span>
-          </div>
-          <Link href="/" className="text-white font-bold text-lg">SiLapor Kota</Link>
+          <Link href="/" className="flex items-center gap-2.5">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo-lampung.png"
+              alt="Logo Pemda Lampung"
+              className="h-9 w-auto max-w-[36px] object-contain"
+            />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo-teknokrat.png"
+              alt="Logo UTI"
+              className="h-9 w-auto max-w-[36px] object-contain"
+            />
+            <span className="text-gray-900 font-bold text-lg ml-1">SiLapor Kota</span>
+          </Link>
         </div>
       </header>
 
@@ -133,6 +138,39 @@ export default function LoginPage() {
                 Daftar sebagai warga
               </Link>
             </p>
+
+            {/* Quick Demo Accounts Fill */}
+            <div className="mt-6 pt-5 border-t border-gray-100">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2.5 text-center">
+                Akun Demo Pengujian (Klik untuk Isi):
+              </p>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setForm({ email: 'admin@silaporkota.go.id', password: 'admin123' })}
+                  className="text-xs bg-purple-50 hover:bg-purple-100 text-purple-700 py-2 px-2 rounded-lg border border-purple-200 transition-colors font-medium text-center flex flex-col items-center gap-0.5"
+                >
+                  <span className="text-sm">👑</span>
+                  <span>Admin</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setForm({ email: 'petugas@silaporkota.go.id', password: 'petugas123' })}
+                  className="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 py-2 px-2 rounded-lg border border-blue-200 transition-colors font-medium text-center flex flex-col items-center gap-0.5"
+                >
+                  <span className="text-sm">👷</span>
+                  <span>Petugas</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setForm({ email: 'warga@example.com', password: 'warga123' })}
+                  className="text-xs bg-green-50 hover:bg-green-100 text-green-700 py-2 px-2 rounded-lg border border-green-200 transition-colors font-medium text-center flex flex-col items-center gap-0.5"
+                >
+                  <span className="text-sm">👤</span>
+                  <span>Warga</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </main>

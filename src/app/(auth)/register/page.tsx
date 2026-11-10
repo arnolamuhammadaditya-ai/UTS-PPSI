@@ -44,18 +44,24 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      <header className="bg-primary-500 py-4">
+      {/* Header minimal */}
+      <header className="bg-white border-b border-gray-200 py-3">
         <div className="max-w-7xl mx-auto px-4 flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
-            <svg viewBox="0 0 40 40" className="w-6 h-6" fill="none">
-              <circle cx="20" cy="20" r="18" fill="#0B5CAD" />
-              <path d="M20 8L24 16H28L22 20L24 28L20 24L16 28L18 20L12 16H16L20 8Z" fill="gold" />
-            </svg>
-          </div>
-          <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
-            <span className="text-primary-500 font-black text-xs">UTI</span>
-          </div>
-          <Link href="/" className="text-white font-bold text-lg">SiLapor Kota</Link>
+          <Link href="/" className="flex items-center gap-2.5">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo-lampung.png"
+              alt="Logo Pemda Lampung"
+              className="h-9 w-auto max-w-[36px] object-contain"
+            />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo-teknokrat.png"
+              alt="Logo UTI"
+              className="h-9 w-auto max-w-[36px] object-contain"
+            />
+            <span className="text-gray-900 font-bold text-lg ml-1">SiLapor Kota</span>
+          </Link>
         </div>
       </header>
 
