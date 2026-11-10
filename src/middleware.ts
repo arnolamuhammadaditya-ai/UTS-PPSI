@@ -12,6 +12,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/api/admin/categories') || // GET categories is public
     pathname === '/' ||
     pathname.startsWith('/laporan') ||
+    pathname === '/peta' ||
     pathname === '/login' ||
     pathname === '/register'
   ) {
